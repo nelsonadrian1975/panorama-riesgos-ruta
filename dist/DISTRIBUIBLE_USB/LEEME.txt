@@ -1,0 +1,10 @@
+PANORAMA DE RIESGOS DE RUTA - DISTRIBUIBLE USB
+
+1. Abra ABRIR_PANORAMA_RIESGOS_RUTA.html con doble clic.
+2. No requiere instalacion ni permisos de administrador.
+3. Puede trabajar con archivos editables .panr.json usando Abrir, Guardar y Guardar como.
+4. Para mapa, puede cargar una captura o un archivo GPX. Si hay internet, el GPX puede verse sobre OpenStreetMap; sin internet, la ruta se representa en modo tecnico.
+5. Para generar PDF, use el boton Generar PDF y guarde desde la ventana de impresion del navegador.
+6. En impresion, active graficos de fondo si el navegador lo solicita.
+
+Autor: Nelson Adrian Arca Godoy - Ingeniero Quimico - CIP 182479
