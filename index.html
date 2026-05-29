@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panorama de Riesgos de Ruta</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main id="app">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <div class="brand">
+          <span class="brand-mark">PR</span>
+          <div>
+            <strong>Panorama</strong>
+            <span>Riesgos de ruta</span>
+          </div>
+        </div>
+
+        <nav class="tabs" aria-label="Secciones">
+          <button class="tab is-active" data-tab="project">Proyecto</button>
+          <button class="tab" data-tab="route">Ruta</button>
+          <button class="tab" data-tab="media">Mapa y fotos</button>
+          <button class="tab" data-tab="people">Personal</button>
+          <button class="tab" data-tab="trips">Viajes</button>
+          <button class="tab" data-tab="history">Historial</button>
+          <button class="tab" data-tab="attachments">Anexos</button>
+          <button class="tab" data-tab="export">PDF</button>
+        </nav>
+
+        <div class="side-actions">
+          <button class="button" data-open-modal="tutorialModal">Tutorial</button>
+          <button class="button" data-open-modal="aboutModal">Acerca de</button>
+          <button id="openProject" class="button">Abrir</button>
+          <button id="saveData" class="button primary">Guardar</button>
+          <button id="saveAsProject" class="button">Guardar como</button>
+          <button id="loadSample" class="button">Ejemplo</button>
+          <button id="resetData" class="button danger">Limpiar</button>
+          <input id="openProjectInput" type="file" accept=".panr.json,.json,application/json" hidden>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Documento maestro</p>
+            <h1 id="pageTitle">Panorama de Riesgos de Ruta</h1>
+          </div>
+          <div class="status" id="saveStatus">Listo</div>
+        </header>
+
+        <section class="panel is-active" data-panel="project">
+          <div class="section-heading">
+            <h2>Datos del proyecto</h2>
+            <p>Define la ruta base. El retorno se genera invirtiendo origen, destino, puntos, fotos y viajes.</p>
+          </div>
+
+          <div class="form-grid">
+            <label>Nombre del documento<input id="projectName" type="text"></label>
+            <label>Cliente<input id="client" type="text"></label>
+            <label>Empresa<input id="company" type="text"></label>
+            <label>Tipo de servicio
+              <select id="serviceType">
+                <option>Fractura</option>
+                <option>Cementación</option>
+                <option>Convoy especial</option>
+                <option>Otro</option>
+              </select>
+            </label>
+            <label>Origen<input id="origin" type="text"></label>
+            <label>Destino<input id="destination" type="text"></label>
+            <label>Fecha<input id="issueDate" type="date"></label>
+            <label>Versión<input id="version" type="text"></label>
+            <label>Distancia total<input id="totalDistance" type="text" placeholder="Ej. 86 km"></label>
+            <label>Elaborado por<input id="preparedBy" type="text"></label>
+            <label>Revisado por<input id="reviewedBy" type="text"></label>
+            <label>Aprobado por<input id="approvedBy" type="text"></label>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="route">
+          <div class="section-heading with-action">
+            <div>
+              <h2>Puntos críticos de ruta</h2>
+              <p>Registra los puntos en sentido de ida. Puedes insertar tramos, reordenar puntos y escribir una descripción especial para retorno.</p>
+            </div>
+            <button id="addPoint" class="button primary">Agregar punto</button>
+          </div>
+          <div id="pointsList" class="stack"></div>
+        </section>
+
+        <section class="panel" data-panel="media">
+          <div class="section-heading">
+            <h2>Mapa general y fotografías</h2>
+            <p>El mapa se usa en la portada/sección de ruta. Las fotos se asocian a cada punto y se invierten en retorno.</p>
+          </div>
+          <div class="media-grid">
+            <div class="map-box">
+              <label class="file-drop">
+                <input id="mapInput" type="file" accept="image/*">
+                <span>Cargar captura de Geo Tracker / mapa</span>
+              </label>
+              <label class="file-drop">
+                <input id="gpxInput" type="file" accept=".gpx,application/gpx+xml,text/xml,application/xml">
+                <span>Cargar ruta GPX</span>
+              </label>
+              <img id="mapPreview" alt="Mapa general de ruta">
+              <div id="gpxPreview" class="route-preview" aria-label="Vista previa de ruta GPX"></div>
+              <div id="mapSourceStatus" class="map-source-status">Sin mapa cargado</div>
+              <button id="clearRouteMap" class="button" type="button">Quitar mapa/ruta</button>
+            </div>
+            <div id="photoManager" class="stack"></div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="people">
+          <div class="section-heading with-action">
+            <div>
+              <h2>Personal involucrado</h2>
+              <p>Lista de contacto y responsabilidades para el movimiento.</p>
+            </div>
+            <button id="addPerson" class="button primary">Agregar persona</button>
+          </div>
+          <div id="peopleList" class="stack"></div>
+        </section>
+
+        <section class="panel" data-panel="trips">
+          <div class="section-heading with-action">
+            <div>
+              <h2>Configuración de viajes</h2>
+              <p>Registra los viajes de ida. Para retorno se aplica: lo que llega primero sale último.</p>
+            </div>
+            <button id="addTrip" class="button primary">Agregar viaje</button>
+          </div>
+          <div id="tripsList" class="stack"></div>
+        </section>
+
+        <section class="panel" data-panel="history">
+          <div class="section-heading with-action">
+            <div>
+              <h2>Historial de cambios</h2>
+              <p>Registra modificaciones relevantes de ruta, anexos, viajes o condiciones temporales.</p>
+            </div>
+            <button id="addHistory" class="button primary">Agregar cambio</button>
+          </div>
+          <div id="historyList" class="stack"></div>
+        </section>
+
+        <section class="panel" data-panel="attachments">
+          <div class="section-heading with-action">
+            <div>
+              <h2>Documentos adjuntos</h2>
+              <p>Carga permisos de trabajo, inspecciones de unidades u otros documentos como imagen. Se agregarán al final del PDF como anexos.</p>
+            </div>
+            <button id="addAttachment" class="button primary">Agregar anexo</button>
+          </div>
+          <div id="attachmentsList" class="stack"></div>
+        </section>
+
+        <section class="panel" data-panel="export">
+          <div class="section-heading">
+            <h2>Generar PDF</h2>
+            <p>Elige el sentido, revisa la vista previa y usa imprimir para guardar como PDF.</p>
+          </div>
+
+          <div class="export-toolbar">
+            <div class="segmented">
+              <button class="direction is-active" data-direction="ida">Ida</button>
+              <button class="direction" data-direction="retorno">Retorno</button>
+            </div>
+            <button id="printPdf" class="button primary">Generar PDF</button>
+          </div>
+
+          <article id="printDocument" class="document"></article>
+        </section>
+      </section>
+    </main>
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <section id="tutorialModal" class="app-modal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" hidden>
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Guía rápida</p>
+            <h2 id="tutorialTitle">Tutorial de uso</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">x</button>
+        </header>
+        <div class="modal-body">
+          <div class="tutorial-grid">
+            <article>
+              <h3>Flujo recomendado</h3>
+              <ol class="quick-guide">
+                <li>Complete los datos del proyecto: origen, destino, servicio, fecha, versión y responsables.</li>
+                <li>Use <strong>Guardar</strong>, <strong>Guardar como</strong> y <strong>Abrir</strong> para trabajar con archivos editables <strong>.panr.json</strong>.</li>
+                <li>Genere el PDF solo como salida final; el archivo maestro editable es el panorama guardado.</li>
+              </ol>
+            </article>
+            <article>
+              <h3>Mapa y ruta</h3>
+              <ol class="quick-guide">
+                <li>Cargue un archivo <strong>GPX</strong> de Geo Tracker para dibujar la ruta real sobre mapa.</li>
+                <li>Si no se usará GPX, cargue una captura de Geo Tracker o del mapa como respaldo.</li>
+                <li>Espere a que cargue el mapa antes de generar el PDF.</li>
+              </ol>
+            </article>
+            <article>
+              <h3>Puntos críticos</h3>
+              <ol class="quick-guide">
+                <li>Registre los puntos en sentido de ida con progresiva, riesgo detectado y nivel de riesgo.</li>
+                <li>Use descripción de retorno cuando el texto técnico cambie por el sentido del recorrido.</li>
+                <li>Inserte o reordene puntos si aparece un desvío, reparación de vía, manifestación u otra condición temporal.</li>
+              </ol>
+            </article>
+            <article>
+              <h3>Criticidad</h3>
+              <ol class="quick-guide">
+                <li>El resumen de criticidad se genera automáticamente desde los niveles Alto, Medio y Bajo.</li>
+                <li>Revise los puntos de atención prioritaria antes de liberar el documento.</li>
+              </ol>
+            </article>
+            <article>
+              <h3>Viajes</h3>
+              <ol class="quick-guide">
+                <li>Registre tractos, conductores y componentes como identificaciones operativas, no solo cantidades.</li>
+                <li>Indique supervisor responsable, escolta delantera, intermedia y posterior.</li>
+                <li>Para retorno, la app invierte automáticamente el orden de viajes.</li>
+              </ol>
+            </article>
+            <article>
+              <h3>Anexos y PDF</h3>
+              <ol class="quick-guide">
+                <li>Adjunte permisos de trabajo, ART, inspecciones de unidades y otros documentos como imágenes.</li>
+                <li>Revise ida y retorno antes de imprimir.</li>
+                <li>En el navegador, active gráficos de fondo si la vista de impresión lo solicita.</li>
+              </ol>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="aboutModal" class="app-modal about-modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Sistema local</p>
+            <h2 id="aboutTitle">Acerca de</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">x</button>
+        </header>
+        <div class="modal-body">
+          <dl class="about-list">
+            <div><dt>Sistema</dt><dd>Panorama de Riesgos de Ruta</dd></div>
+            <div><dt>Versión</dt><dd>1.1.0 HTML local</dd></div>
+            <div><dt>Autor</dt><dd>Nelson Adri&aacute;n Arca Godoy</dd></div>
+            <div><dt>Perfil</dt><dd>Ingeniero Qu&iacute;mico - CIP 182479 (Piura)
+T&eacute;cnico en Higiene y Seguridad N&deg; Mat. TEC 02973 (Neuqu&eacute;n)
+Desarrollador web full stack</dd></div>
+            <div><dt>Empresa</dt><dd>--</dd></div>
+            <div><dt>e-mail</dt><dd>arcagodoy@gmail.com</dd></div>
+            <div><dt>Celular Per&uacute;</dt><dd>+51 941 644 113</dd></div>
+            <div><dt>Celular Argentina</dt><dd>+54 9 3532 408340</dd></div>
+            <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/adrian-arca/" target="_blank" rel="noopener noreferrer">linkedin.com/in/adrian-arca</a></dd></div>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
